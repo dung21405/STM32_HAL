@@ -19,9 +19,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+#include <stdio.h>
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../Inc/button.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,20 +44,11 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-typedef enum
-{
-  LED_OFF,
-  LED1_BLINK_1HZ,
-  LED2_BLINK_5HZ,
-}Led_t;
-
-static Button_Typedef button1;
-Led_t led_status;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
+static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -63,65 +56,7 @@ static void MX_GPIO_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static void led1_blink_1hz(void)
-{
-  static uint32_t tled1_blink;
-  if(HAL_GetTick() - tled1_blink >= 500)
-  {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
-    tled1_blink = HAL_GetTick();
-  }
-}
-static void led2_blink_5hz(void)
-{
-  static uint32_t tled2_blink;
-  if(HAL_GetTick() - tled2_blink >= 100)
-  {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
-    tled2_blink = HAL_GetTick();
-  }
-}
-static void led_off(void)
-{
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2 | GPIO_PIN_8 , GPIO_PIN_RESET);
-}
-static void led_handle(void)
-{
-  switch(led_status)
-  {
-    case LED_OFF:
-      led_off();
-      break;
-    case LED1_BLINK_1HZ:
-      led1_blink_1hz();
-      break;
-    case LED2_BLINK_5HZ:
-      led2_blink_5hz();
-      break;
-    default:
-      break;
-  }
-}
 
-void btn_pressing_callback(const Button_Typedef *ButtonX)
-{
-  if(ButtonX->GPIOx ==GPIOA && ButtonX->GPIO_Pin == GPIO_PIN_1) {
-    switch(led_status)
-    {
-      case LED_OFF:
-        led_status = LED1_BLINK_1HZ;
-        break;
-      case LED1_BLINK_1HZ:
-        led_status = LED2_BLINK_5HZ;
-        break;
-      case LED2_BLINK_5HZ:
-        led_status = LED_OFF;
-        break;
-      default:
-        break;
-    }
-  }
-}
 /* USER CODE END 0 */
 
 /**
@@ -141,7 +76,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  button_init(&button1, GPIOA, GPIO_PIN_1);
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -154,7 +89,8 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-  led_status = LED_OFF;
+  uint32_t time_current_1=0;
+  uint32_t time_current_2=0;
 
   /* USER CODE END 2 */
 
@@ -163,13 +99,18 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+    if (HAL_GetTick() - time_current_1 >= 500) {
+      time_current_1 = HAL_GetTick();
+      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+    }
+    if (HAL_GetTick() - time_current_2 >= 200) {
+      time_current_2 = HAL_GetTick();
+      HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+      printf("Hello World!\n");
+    }
+
 
     /* USER CODE BEGIN 3 */
-    button_handle(&button1);
-    led_handle();
-
-    /* small delay to avoid busy loop */
-    HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }
@@ -230,16 +171,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2|GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA1 PA2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB2 PB8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_8;
+  /*Configure GPIO pin : PB2 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

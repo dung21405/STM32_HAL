@@ -1,14 +1,14 @@
 //
 // Created by dung on 8/5/26.
 //
-#include "button.h"
+#include "../Inc/button.h"
 
-__weak void btn_pressing_callback(Button_Typedef* ButtonX);
-__weak void btn_release_callback(Button_Typedef* ButtonX);
-__weak void btn_press_short_callback(Button_Typedef* ButtonX);
-__weak void btn_press_timeout_callback(Button_Typedef* ButtonX);
+__weak void btn_pressing_callback(const Button_Typedef* ButtonX);
+__weak void btn_release_callback(const Button_Typedef* ButtonX);
+__weak void btn_press_short_callback(const Button_Typedef* ButtonX);
+__weak void btn_press_timeout_callback(const Button_Typedef* ButtonX);
 
-void button_init(Button_Typedef* ButtonX, GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
+void button_init(Button_Typedef* ButtonX, GPIO_TypeDef *GPIOx,const uint16_t GPIO_Pin)
 {
     ButtonX->GPIOx = GPIOx;
     ButtonX->GPIO_Pin = GPIO_Pin;
@@ -19,7 +19,7 @@ void button_init(Button_Typedef* ButtonX, GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin
 
 void button_handle(Button_Typedef* ButtonX)
 {
-    /*  ----------------- Loc nhieu ----------------------*/
+    /*  ----------------- Noise Fillter  ----------------------*/
     uint8_t sta = HAL_GPIO_ReadPin(ButtonX->GPIOx, ButtonX->GPIO_Pin);
     if(sta != ButtonX->btn_filter)
     {
@@ -32,16 +32,16 @@ void button_handle(Button_Typedef* ButtonX)
         ButtonX->btn_current = ButtonX->btn_filter;
         ButtonX->is_debouncing = 0;
     }
-    /*-------------- Xu li------------------------------*/
+    /*-------------- Processing------------------------------*/
     if(ButtonX->btn_current != ButtonX->btn_last)
     {
-        if(ButtonX->btn_current == 0) // Nhan xuong
+        if(ButtonX->btn_current == 0)   //Pressing Button
         {
             btn_pressing_callback(ButtonX);
             ButtonX->time_start_press = HAL_GetTick();
             ButtonX->is_press_timeout = 1;
         }
-        else  // Nha nut
+        else  // Release Button
         {
             if(HAL_GetTick() - ButtonX->time_start_press <= 1000)
             {
@@ -51,6 +51,7 @@ void button_handle(Button_Typedef* ButtonX)
             ButtonX->is_press_timeout = 0;
         }
         ButtonX->btn_last = ButtonX->btn_current;
+
     }
     if(ButtonX->is_press_timeout && (HAL_GetTick() - ButtonX->time_start_press > 3000))
     {

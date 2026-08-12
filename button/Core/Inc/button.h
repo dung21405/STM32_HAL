@@ -54,4 +54,10 @@ void button_init(Button_Typedef* ButtonX, GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin
 * Return         : None
 *******************************************************************************/
 void button_handle(Button_Typedef* ButtonX);
+
+void btn_pressing_callback(const Button_Typedef* ButtonX);
+void btn_release_callback(const Button_Typedef* ButtonX);
+void btn_press_short_callback(const Button_Typedef* ButtonX);
+void btn_press_timeout_callback(const Button_Typedef* ButtonX);
+
 #endif //BUTTON_BUTTON_H
